@@ -51,3 +51,22 @@ function operate (num1, num2, operand) {
         case '/': return divide(num1, num2);
     }
 }
+
+function updateDisplay(num1, num2, operand) {
+    const display = document.querySelector(".display text");
+
+    if (num1 == null) {
+        display.textContent = '0';
+    }
+    else if (operand == null) {
+        display.textContent = `${num1}`;
+    }
+    else if (num2 == null) {
+        display.textContent = `${num1}${operand}`;
+    }
+    else {
+        display.textContent = `${num1}${operand}${num2}`;
+    }
+}
+
+updateDisplay(null, null, null);
