@@ -1,28 +1,16 @@
-/* 
-PSUEDOCODE
+// calculator states
+const GETTING_FIRST_NUM = 1; // filling input string, yet to hit operator button
+const GETTING_NEW_OPERATOR = 2; // filling input string, yet to hit equal or another operator button
+const GETTING_NEW_NUMBER = 3; //
 
-FUNCTION add
-    INPUT number1, number2
-    RETURN number1 + number2
+let state = GETTING_FIRST_NUM;
 
-FUNCTION subtract
-    INPUT number1, number2
-    RETURN number1 - number2
+// inputs
 
-FUNCTION multiply
-    INPUT number1, number2
-    RETURN number1 * number2
-
-FUNCTION divide
-    INPUT number1, number2
-    RETURN number1 / number2
-
-FUNCTION operate
-    INPUT number1, operand, number2
-        INIT solution
-
-        IF operand == * 
-*/
+let inputString = '';
+let num1 = null;
+let num2 = null;
+let operand = null;
 
 function add (num1, num2) {
     return num1 + num2;
@@ -40,33 +28,115 @@ function divide (num1, num2) {
     return num1 / num2;
 }
 
-function operate (num1, num2, operand) {
-    switch (operand) {
-        case '+': return add(num1, num2);
+function operate (first, second, operator) {
+    switch (operator) {
+        case '+': return add(first, second);
 
-        case '-': return subtract(num1, num2);
+        case '-': return subtract(first, second);
 
-        case '*': return multiply(num1, num2);
+        case '×': return multiply(first, second);
 
-        case '/': return divide(num1, num2);
+        case '÷': return divide(first, second);
+
+        default: return first; // hit equals without choosing an operand
     }
 }
 
-function updateDisplay(num1, num2, operand) {
+function updateDisplay() {
     const display = document.querySelector(".display text");
 
-    if (num1 == null) {
-        display.textContent = '0';
+    if (state == GETTING_FIRST_NUM) {
+        display.textContent = inputString;
     }
-    else if (operand == null) {
+    else if (state == GETTING_NEW_NUMBER) {
+        //console.log("here i am");
+        display.textContent = `${num1}${operand}${inputString}`;
+    }
+    else if (state == GETTING_NEW_OPERATOR) {
         display.textContent = `${num1}`;
-    }
-    else if (num2 == null) {
-        display.textContent = `${num1}${operand}`;
-    }
-    else {
-        display.textContent = `${num1}${operand}${num2}`;
     }
 }
 
-updateDisplay(null, null, null);
+
+const keypad = document.querySelector('.keypad');
+keypad.addEventListener('click', (Event) => {
+    const target = Event.target;
+    console.log(`clicked ${target.textContent} in state: ${state}`);
+    if (target.id == 'clear') {
+        clear();
+    }
+    else {
+        callControl(target);
+    }
+}); // if (target.type == 'button')
+
+function callControl (target) {
+    let text = target.textContent;
+    if ((text == '÷') || (text == '×') || (text == '+') || (text == '-') || (text == '=')) {
+        switch (state) {
+            case GETTING_FIRST_NUM:
+                    if (inputString == '' || text == '=') {
+                    return;
+                } 
+                else setFirstNumber(text);
+                break;
+            
+            case GETTING_NEW_NUMBER: if (inputString == '') {
+                    setOperand(text);
+                }
+                else {
+                    evaluateEquation(text);
+                }
+                break;
+            case GETTING_NEW_OPERATOR: if (text == '=') {
+                    evaluateEquation(operand);
+                }
+                else {
+                    state = GETTING_NEW_NUMBER;
+                    setOperand(text);
+                }
+                break;
+        }
+    }
+    else if (Number.isInteger(+text) && (state == GETTING_FIRST_NUM || state == GETTING_NEW_NUMBER)) { // need to get an operator if in this state
+        inputString = inputString + text;
+        updateDisplay();
+    }
+}
+
+// state-changing functions
+
+function clear () {
+    state = GETTING_FIRST_NUM;
+    inputString = '';
+    num1 = null;
+    num2 = null;
+    operand = null;
+    updateDisplay();
+}
+
+function setFirstNumber (operandString) { // initiated by clicking an operator button
+    //console.log("madde it");
+    num1 = inputString;
+    operand = operandString;
+    inputString = '';
+    state = GETTING_NEW_NUMBER;
+    updateDisplay();
+}
+
+function setOperand (operandString) { // changing operand before calculation
+    operand = operandString;
+    updateDisplay();
+}
+
+function evaluateEquation (buttonString) {
+    num2 = inputString;
+    num1 = operate(+num1, +num2, operand);
+    state = GETTING_NEW_OPERATOR;
+    if (buttonString != '=') {
+        operand = buttonString;
+        state = GETTING_NEW_NUMBER;
+    }
+    inputString = '';
+    updateDisplay();
+}
